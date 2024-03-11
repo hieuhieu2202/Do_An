@@ -1,10 +1,13 @@
 import 'dart:io';
 
 import 'package:delivery_food/widgets/custom_text_field.dart';
+import 'package:delivery_food/widgets/error_dialog.dart';
+import 'package:delivery_food/widgets/loading_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as fStorage;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -27,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Position? position;
   List<Placemark>? placeMarks;
+  String sellerImageURL = "";
 
   Future<void> _getImage() async {
     imageXFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -36,7 +40,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> getCurrentLocation() async {
-
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       // Yêu cầu quyền nếu chưa được cấp
@@ -63,8 +66,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Placemark pMark = placeMarks![0];
 
     // Tạo một chuỗi đầy đủ thông tin địa chỉ
-    String completeAddress =
-        '${pMark.name ?? ''}, ' // Tên địa điểm (nếu có)
+    String completeAddress = '${pMark.name ?? ''}, ' // Tên địa điểm (nếu có)
         '${pMark.subThoroughfare ?? ''} ' // Số nhỏ nhất
         '${pMark.thoroughfare ?? ''}, ' // Tên đường
         '${pMark.subLocality ?? ''}, ' // Phường/Xã
@@ -80,6 +82,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // completeAddress.trim();
       locationController.text = completeAddress;
     });
+  }
+
+  Future<void> formValidation() async {
+    if (imageXFile == null) {
+      showDialog(
+        context: context,
+        builder: (c) {
+          return ErrorDialog(
+            message: "Chọn ảnh cửa hàng của bạn",
+          );
+        },
+      );
+    } else {
+      if (passwordController.text == confirmPasswordController.text) {
+        if (confirmPasswordController.text.isNotEmpty &&
+            emailController.text.isNotEmpty &&
+            nameController.text.isNotEmpty &&
+            phoneController.text.isNotEmpty &&
+            locationController.text.isNotEmpty) {
+          showDialog(
+              context: context,
+              builder: (c) {
+                return LoadingDialog(
+                  message: "Đang đăng ký tài khoản",
+                );
+              });
+          String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+          fStorage.Reference reference = fStorage.FirebaseStorage.instance
+              .ref()
+              .child("sellers")
+              .child(fileName);
+          fStorage.UploadTask uploadTask =
+              reference.putFile(File(imageXFile!.path));
+          fStorage.TaskSnapshot taskSnapshot =
+              await uploadTask.whenComplete(() {});
+          await taskSnapshot.ref.getDownloadURL().then((url) {
+            sellerImageURL=url;
+          });
+
+
+        } else {
+          showDialog(
+            context: context,
+            builder: (c) {
+              return ErrorDialog(
+                message: "Hãy nhập đầy đủ thông tin",
+              );
+            },
+          );
+        }
+      } else {
+        showDialog(
+          context: context,
+          builder: (c) {
+            return ErrorDialog(
+              message: "Mật khẩu không gống nhau",
+            );
+          },
+        );
+      }
+    }
   }
 
   @override
@@ -185,7 +248,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 height: 30,
               ),
               ElevatedButton(
-                onPressed: () => print("Clicked Đăng ký"),
+                onPressed: () {
+                  //=> print("Clicked Đăng ký"),
+                  formValidation();
+                },
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.cyan,
                     padding: const EdgeInsets.symmetric(

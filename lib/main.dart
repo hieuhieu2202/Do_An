@@ -1,11 +1,18 @@
 import 'package:delivery_food/splashScreen/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'firebase_options.dart';
+
+// Import the generated file
+// Import the generated file
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Dòng này đảm bảo rằng các liên kết của framework
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Dòng này đảm bảo rằng các liên kết của framework
+   await Firebase.initializeApp(
+options: DefaultFirebaseOptions.currentPlatform,
 
-  await Firebase.initializeApp();
+   );
   // Flutter được khởi tạo trước khi ứng dụng chạy
   runApp(const MyApp());
 }
@@ -18,7 +25,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Seller ',
       theme: ThemeData(
-
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
@@ -27,4 +33,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
