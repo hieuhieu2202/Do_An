@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:delivery_food/mainScreen/home_screen.dart';
 import 'package:delivery_food/widgets/custom_text_field.dart';
 import 'package:delivery_food/widgets/error_dialog.dart';
 import 'package:delivery_food/widgets/loading_dialog.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -31,6 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Position? position;
   List<Placemark>? placeMarks;
   String sellerImageURL = "";
+  String completeAddress ="";
 
   Future<void> _getImage() async {
     imageXFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -66,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Placemark pMark = placeMarks![0];
 
     // Tạo một chuỗi đầy đủ thông tin địa chỉ
-    String completeAddress = '${pMark.name ?? ''}, ' // Tên địa điểm (nếu có)
+    completeAddress = '${pMark.name ?? ''}, ' // Tên địa điểm (nếu có)
         '${pMark.subThoroughfare ?? ''} ' // Số nhỏ nhất
         '${pMark.thoroughfare ?? ''}, ' // Tên đường
         '${pMark.subLocality ?? ''}, ' // Phường/Xã
@@ -118,10 +122,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           fStorage.TaskSnapshot taskSnapshot =
               await uploadTask.whenComplete(() {});
           await taskSnapshot.ref.getDownloadURL().then((url) {
-            sellerImageURL=url;
+            sellerImageURL = url;
+            authentiocateSellerAndSignUp();
           });
-
-
         } else {
           showDialog(
             context: context,
@@ -143,6 +146,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     }
+  }
+void authentiocateSellerAndSignUp() async{
+    User? currentUser;
+    final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+    await firebaseAuth.createUserWithEmailAndPassword(email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+    ).then((auth) {
+      currentUser = auth.user;
+    });
+    if (currentUser!=null){
+      saveDataToFireStore(currentUser!).then((value) {
+        Navigator.pop(context);
+        Route newRoute = MaterialPageRoute(builder: (c) => HomeScreen());
+        Navigator.pushReplacement(context, newRoute);
+      });
+    }
+}
+  Future saveDataToFireStore(User currentUser) async {
+    FirebaseFirestore.instance.collection("sellers").doc(currentUser.uid).set({
+      "sellerUID": currentUser.uid,
+      "sellerEmail": currentUser.email,
+      "sellerName": nameController.text.toString(),
+      "sellerAvatarURL": sellerImageURL,
+      "phone": phoneController.text.trim(),
+      "address":  completeAddress,
+      "status":  "approved",
+      "earning": 0.0,
+      "lat": position!.latitude,
+      "lng": position!.longitude,
+    });
   }
 
   @override
