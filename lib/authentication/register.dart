@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_food/mainScreen/home_screen.dart';
 import 'package:delivery_food/widgets/custom_text_field.dart';
@@ -11,6 +10,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as fStorage;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -34,7 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Position? position;
   List<Placemark>? placeMarks;
   String sellerImageURL = "";
-  String completeAddress ="";
+  String completeAddress = "";
 
   Future<void> _getImage() async {
     imageXFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -147,22 +147,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     }
   }
-void authentiocateSellerAndSignUp() async{
+
+  void authentiocateSellerAndSignUp() async {
     User? currentUser;
     final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-    await firebaseAuth.createUserWithEmailAndPassword(email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-    ).then((auth) {
+    await firebaseAuth
+        .createUserWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    )
+        .then((auth) {
       currentUser = auth.user;
+    }).catchError((error) {
+      Navigator.pop(context);
+      {
+        showDialog(
+          context: context,
+          builder: (c) {
+            return ErrorDialog(
+              message: error.message.toString(),
+            );
+          },
+        );
+      }
     });
-    if (currentUser!=null){
+    if (currentUser != null) {
       saveDataToFireStore(currentUser!).then((value) {
         Navigator.pop(context);
         Route newRoute = MaterialPageRoute(builder: (c) => HomeScreen());
         Navigator.pushReplacement(context, newRoute);
       });
     }
-}
+  }
+
   Future saveDataToFireStore(User currentUser) async {
     FirebaseFirestore.instance.collection("sellers").doc(currentUser.uid).set({
       "sellerUID": currentUser.uid,
@@ -170,12 +187,17 @@ void authentiocateSellerAndSignUp() async{
       "sellerName": nameController.text.toString(),
       "sellerAvatarURL": sellerImageURL,
       "phone": phoneController.text.trim(),
-      "address":  completeAddress,
-      "status":  "approved",
+      "address": completeAddress,
+      "status": "approved",
       "earning": 0.0,
       "lat": position!.latitude,
       "lng": position!.longitude,
     });
+    SharedPreferences? sharePreferences = await SharedPreferences.getInstance();
+    await sharePreferences!.setString('uid', currentUser.uid);
+    await sharePreferences!.setString('email', emailController.text.trim());
+    await sharePreferences!.setString('name', nameController.text.trim());
+    await sharePreferences!.setString('photoURL', sellerImageURL);
   }
 
   @override
