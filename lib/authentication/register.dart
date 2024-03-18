@@ -12,6 +12,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as fStorage;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../global/global.dart';
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -123,7 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               await uploadTask.whenComplete(() {});
           await taskSnapshot.ref.getDownloadURL().then((url) {
             sellerImageURL = url;
-            authentiocateSellerAndSignUp();
+            authenticateSellerAndSignUp();
           });
         } else {
           showDialog(
@@ -148,9 +150,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  void authentiocateSellerAndSignUp() async {
+  void authenticateSellerAndSignUp() async {
     User? currentUser;
-    final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+
+    // final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     await firebaseAuth
         .createUserWithEmailAndPassword(
       email: emailController.text.trim(),
@@ -193,7 +196,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       "lat": position!.latitude,
       "lng": position!.longitude,
     });
-    SharedPreferences? sharePreferences = await SharedPreferences.getInstance();
+    sharePreferences = await SharedPreferences.getInstance();
     await sharePreferences!.setString('uid', currentUser.uid);
     await sharePreferences!.setString('email', emailController.text.trim());
     await sharePreferences!.setString('name', nameController.text.trim());
@@ -238,9 +241,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Column(
                     children: [
                       CustomTextField(
-                        data: Icons.person,
+                        data: Icons.house,
                         controller: nameController,
-                        hintText: "Họ và tên",
+                        hintText: "Tên cửa hàng",
                         isObsecre: false,
                       ),
                       CustomTextField(

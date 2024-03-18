@@ -1,14 +1,18 @@
+import 'package:delivery_food/global/global.dart';
 import 'package:delivery_food/splashScreen/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 // Import the generated file
 // Import the generated file
 
 Future<void> main() async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Dòng này đảm bảo rằng các liên kết của framework
+  WidgetsFlutterBinding.ensureInitialized();
+
+  sharePreferences = await SharedPreferences.getInstance();
+  // Dòng này đảm bảo rằng các liên kết của framework
    await Firebase.initializeApp(
 options: DefaultFirebaseOptions.currentPlatform,
 
