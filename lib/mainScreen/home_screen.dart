@@ -1,6 +1,9 @@
 import 'package:delivery_food/authentication/auth_screen.dart';
 import 'package:delivery_food/global/global.dart';
+import 'package:delivery_food/uploadScreens/menus_upload_screen.dart';
+import 'package:delivery_food/widgets/my_drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,6 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const MyDrawer(),
       appBar: AppBar(
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -29,26 +33,28 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         title: Text(
           sharePreferences!.getString("name")!,
-          style: TextStyle(color: Colors.red),
+          style: const TextStyle(
+              color: Colors.red,
+              fontFamily: "Lobster",
+              fontSize: 30)
+          ,
         ),
         centerTitle: true,
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.post_add,
+              size: 35,
+            ),
+            onPressed: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (c) => const MenusUploadScreen()));
+            },
+          )
+        ],
       ),
-      body: Center(
-        child: ElevatedButton(
-          child: Text("Đăng xuất"),
-          style: ElevatedButton.styleFrom(
-            primary: Colors.cyan,
-          ),
-          onPressed: () {
-            firebaseAuth.signOut().then((value) {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (c) => const AuthScreen()));
-            });
-
-          },
-        ),
-      ),
+      body: Center(),
     );
   }
 }
