@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class TextWidgetHeader extends SliverPersistentHeaderDelegate {
   String? title;
 
-  TextWidgetHeader(this.title);
+  TextWidgetHeader({this.title});
 
   @override
   Widget build(

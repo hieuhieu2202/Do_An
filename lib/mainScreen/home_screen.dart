@@ -67,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: CustomScrollView(
         slivers: [
           SliverPersistentHeader(
-              pinned: true, delegate: TextWidgetHeader("Menu của tôi")),
+              pinned: true, delegate: TextWidgetHeader(title: "Menu của tôi")),
           StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection("sellers")
